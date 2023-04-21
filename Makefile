@@ -14,14 +14,14 @@ K8S_TARGETS = cms kbs ihub hvs authservice
 
 $(TARGETS):
 	cd cmd/$@ && env GOOS=linux GOSUMDB=off \
-		go build -ldflags "-X github.com/intel-secl/intel-secl/v3/pkg/$@/version.BuildDate=$(BUILDDATE) -X github.com/intel-secl/intel-secl/v3/pkg/$@/version.Version=$(VERSION) -X github.com/intel-secl/intel-secl/v3/pkg/$@/version.GitHash=$(GITCOMMIT)" -o $@
+		go build -ldflags "-X github.com/mansishr/intel-secl/v3/pkg/$@/version.BuildDate=$(BUILDDATE) -X github.com/mansishr/intel-secl/v3/pkg/$@/version.Version=$(VERSION) -X github.com/mansishr/intel-secl/v3/pkg/$@/version.GitHash=$(GITCOMMIT)" -o $@
 
 kbs:
 	mkdir -p installer
 	cp /usr/local/lib/libkmip.so.0.2 installer/libkmip.so.0.2
 	cd cmd/kbs && env CGO_CFLAGS_ALLOW="-f.*" GOOS=linux GOSUMDB=off \
 		go build -gcflags=all="-N -l" \
-		-ldflags "-X github.com/intel-secl/intel-secl/v3/pkg/kbs/version.BuildDate=$(BUILDDATE) -X github.com/intel-secl/intel-secl/v3/pkg/kbs/version.Version=$(VERSION) -X github.com/intel-secl/intel-secl/v3/pkg/kbs/version.GitHash=$(GITCOMMIT)" -o kbs
+		-ldflags "-X github.com/mansishr/intel-secl/v3/pkg/kbs/version.BuildDate=$(BUILDDATE) -X github.com/mansishr/intel-secl/v3/pkg/kbs/version.Version=$(VERSION) -X github.com/mansishr/intel-secl/v3/pkg/kbs/version.GitHash=$(GITCOMMIT)" -o kbs
 
 %-installer: %
 	mkdir -p installer
