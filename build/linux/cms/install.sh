@@ -79,6 +79,7 @@ cp cms.service $PRODUCT_HOME && chown cms:cms $PRODUCT_HOME/cms.service && chown
 #systemctl disable cms.service > /dev/null 2>&1
 #systemctl enable $PRODUCT_HOME/cms.service
 #systemctl daemon-reload
+/usr/bin/cms run &
 
 #Install log rotation
 auto_install() {
