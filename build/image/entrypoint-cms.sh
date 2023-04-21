@@ -37,4 +37,5 @@ if [ ! -z $SETUP_TASK ]; then
   rm -rf /tmp/config.yml
 fi
 
-cms run
+#cms run
+/usr/bin/cms run &
