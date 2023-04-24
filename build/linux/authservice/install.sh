@@ -80,9 +80,10 @@ chmod 740 $LOG_PATH
 cp authservice.service $PRODUCT_HOME && chown $SERVICE_USERNAME:$SERVICE_USERNAME $PRODUCT_HOME/authservice.service && chown $SERVICE_USERNAME:$SERVICE_USERNAME $PRODUCT_HOME
 
 # Enable systemd service
-systemctl disable authservice.service > /dev/null 2>&1
-systemctl enable $PRODUCT_HOME/authservice.service
-systemctl daemon-reload
+#systemctl disable authservice.service > /dev/null 2>&1
+#systemctl enable $PRODUCT_HOME/authservice.service
+#systemctl daemon-reload
+/usr/bin/authservice run &
 
 auto_install() {
   local component=${1}
