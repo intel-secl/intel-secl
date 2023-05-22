@@ -76,10 +76,9 @@ chmod 740 $LOG_PATH
 cp cms.service $PRODUCT_HOME && chown cms:cms $PRODUCT_HOME/cms.service && chown cms:cms $PRODUCT_HOME
 
 # Enable systemd service
-#systemctl disable cms.service > /dev/null 2>&1
-#systemctl enable $PRODUCT_HOME/cms.service
-#systemctl daemon-reload
-/usr/bin/cms run &
+systemctl disable cms.service > /dev/null 2>&1
+systemctl enable $PRODUCT_HOME/cms.service
+systemctl daemon-reload
 
 #Install log rotation
 auto_install() {
@@ -158,10 +157,10 @@ else
     SETUPRESULT=$?
     chown -R cms:cms /etc/cms/
     if [ ${SETUPRESULT} == 0 ]; then 
-        #systemctl start $COMPONENT_NAME
-        #echo "Waiting for daemon to settle down before checking status"
-        #sleep 3
-        #systemctl status $COMPONENT_NAME 2>&1 > /dev/null
+        systemctl start $COMPONENT_NAME
+        echo "Waiting for daemon to settle down before checking status"
+        sleep 3
+        systemctl status $COMPONENT_NAME 2>&1 > /dev/null
         if [ $? != 0 ]; then
             echo "Installation completed with Errors - $COMPONENT_NAME daemon not started."
             echo "Please check errors in syslog using \`journalctl -u $COMPONENT_NAME\`"
