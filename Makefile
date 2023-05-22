@@ -1,3 +1,4 @@
+SHELL := /bin/bash
 GITCOMMIT := $(shell git describe --always)
 GITCOMMITDATE := $(shell git log -1 --date=short --pretty=format:%cd)
 VERSION := "v3.6.1"
