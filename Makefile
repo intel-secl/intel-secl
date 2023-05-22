@@ -13,20 +13,20 @@ TARGETS = cms kbs ihub hvs authservice wpm
 K8S_TARGETS = cms kbs ihub hvs authservice
 
 $(TARGETS):
-	cd cmd/$@ && env GOOS=linux GOSUMDB=off \
-		go build -ldflags "-X github.com/mansishr/intel-secl/v3/pkg/$@/version.BuildDate=$(BUILDDATE) -X github.com/mansishr/intel-secl/v3/pkg/$@/version.Version=$(VERSION) -X github.com/mansishr/intel-secl/v3/pkg/$@/version.GitHash=$(GITCOMMIT)" -o $@
+	cd cmd/$@ && env GOOS=linux GOSUMDB=off GOPROXY=direct \
+		go build -ldflags "-X github.com/intel-secl/intel-secl/v3/pkg/$@/version.BuildDate=$(BUILDDATE) -X github.com/intel-secl/intel-secl/v3/pkg/$@/version.Version=$(VERSION) -X github.com/intel-secl/intel-secl/v3/pkg/$@/version.GitHash=$(GITCOMMIT)" -o $@
 
 kbs:
 	mkdir -p installer
 	cp /usr/local/lib/libkmip.so.0.2 installer/libkmip.so.0.2
-	cd cmd/kbs && env CGO_CFLAGS_ALLOW="-f.*" GOOS=linux GOSUMDB=off \
+	cd cmd/kbs && env CGO_CFLAGS_ALLOW="-f.*" GOOS=linux GOSUMDB=off GOPROXY=direct \
 		go build -gcflags=all="-N -l" \
-		-ldflags "-X github.com/mansishr/intel-secl/v3/pkg/kbs/version.BuildDate=$(BUILDDATE) -X github.com/mansishr/intel-secl/v3/pkg/kbs/version.Version=$(VERSION) -X github.com/mansishr/intel-secl/v3/pkg/kbs/version.GitHash=$(GITCOMMIT)" -o kbs
+		-ldflags "-X github.com/intel-secl/intel-secl/v3/pkg/kbs/version.BuildDate=$(BUILDDATE) -X github.com/intel-secl/intel-secl/v3/pkg/kbs/version.Version=$(VERSION) -X github.com/intel-secl/intel-secl/v3/pkg/kbs/version.GitHash=$(GITCOMMIT)" -o kbs
 
 %-installer: %
 	mkdir -p installer
 	cp build/linux/$*/* installer/
-	cd pkg/lib/common/upgrades && env GOOS=linux GOSUMDB=off go build -o config-upgrade
+	cd pkg/lib/common/upgrades && env GOOS=linux GOSUMDB=off GOPROXY=direct go build -o config-upgrade
 	cp pkg/lib/common/upgrades/config-upgrade installer/
 	cp pkg/lib/common/upgrades/*.sh installer/
 	cp -a upgrades/manifest/ installer/
@@ -62,7 +62,7 @@ kbs-docker: kbs
 	docker save isecl/kbs:$(VERSION) > deployments/container-archive/docker/docker-kbs-$(VERSION)-$(GITCOMMIT).tar
 
 aas-manager:
-	cd tools/aas-manager && env GOOS=linux GOSUMDB=off go build -o populate-users
+	cd tools/aas-manager && env GOOS=linux GOSUMDB=off GOPROXY=direct go build -o populate-users
 	cp tools/aas-manager/populate-users deployments/installer/populate-users.sh
 	cp build/linux/authservice/install_pgdb.sh deployments/installer/install_pgdb.sh
 	cp build/linux/authservice/create_db.sh deployments/installer/create_db.sh
@@ -72,7 +72,7 @@ aas-manager:
 wpm-docker-installer: wpm
 	mkdir -p installer
 	cp build/linux/wpm/* installer/
-	cd pkg/lib/common/upgrades && env GOOS=linux GOSUMDB=off go build -o config-upgrade
+	cd pkg/lib/common/upgrades && env GOOS=linux GOSUMDB=off GOPROXY=direct go build -o config-upgrade
 	cp pkg/lib/common/upgrades/config-upgrade installer/
 	cp pkg/lib/common/upgrades/*.sh installer/
 	cp -a upgrades/manifest/ installer/
