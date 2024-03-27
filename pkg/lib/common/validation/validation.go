@@ -23,6 +23,7 @@ var (
 	issuerDN            = regexp.MustCompile("(^[a-zA-Z0-9-_,.=#+?&;)( ]*$)")
 	unameReg            = regexp.MustCompile(`^[A-Za-z]{1}[A-Za-z0-9_]{1,31}$`)
 	userorEmailReg      = regexp.MustCompile("^[a-zA-Z0-9.-_]+@?[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$")
+	exsiHostUsername    = regexp.MustCompile(`^[a-zA-Z0-9.\-_\\.\\, !#$+=?:{}()\[\]\"|;~'*]+@?[a-zA-Z0-9](?:[a-zA-Z0-9-.\-_\\.\\, !#$+=?:{}()\[\]\"|;~'*]{0,61}[a-zA-Z0-9.\-_\\.\\, !#$+=?:{}()\[\]\"|;~'*])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$`)
 	emailReg            = regexp.MustCompile("^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$")
 	hostnameReg         = regexp.MustCompile("^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\\-]{0,61}[a-zA-Z0-9])\\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\\-]{0,61}[A-Za-z0-9])$")
 	ipReg               = regexp.MustCompile("^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])$")
@@ -110,6 +111,14 @@ func ValidateNameString(name string) error {
 func ValidateUserNameString(uname string) error {
 
 	if len(uname) < MaxLen && userorEmailReg.MatchString(uname) {
+		return nil
+	}
+	return errors.New("Invalid input for username")
+}
+
+func ValidateExsiUserName(uname string) error {
+
+	if len(uname) < MaxLen && exsiHostUsername.MatchString(uname) {
 		return nil
 	}
 	return errors.New("Invalid input for username")

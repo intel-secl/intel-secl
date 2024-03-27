@@ -52,7 +52,7 @@ func ValidateConnectionString(cs string) error {
 		}
 	}
 	if vc.Configuration.Username != "" {
-		if err := validation.ValidateUserNameString(vc.Configuration.Username); err != nil {
+		if err := validation.ValidateExsiUserName(vc.Configuration.Username); err != nil {
 			return errors.Wrap(err, "Invalid username")
 		}
 	}

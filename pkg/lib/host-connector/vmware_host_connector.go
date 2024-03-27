@@ -13,6 +13,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/intel-secl/intel-secl/v4/pkg/model/hvs"
+	"reflect"
 	"sort"
 	"strconv"
 	"strings"
@@ -36,6 +37,8 @@ const (
 	TPM_COMMAND_EVENT_TYPE              = "HostTpmCommandEvent"
 	TPM_OPTION_EVENT_TYPE               = "HostTpmOptionEvent"
 	TPM_BOOT_SECURITY_OPTION_EVENT_TYPE = "HostTpmBootSecurityOptionEvent"
+	TPM_BOOT_COMPLETE_EVENT_TYPE        = "HostTpmBootCompleteEvent"
+	TPM_BOOT_COMPLETE_EVENT_NAME        = "TPM_BOOT_COMPLETE"
 	COMPONENT_PREFIX                    = "componentName."
 	COMMANDLINE_PREFIX                  = "commandLine."
 	VIM_API_PREFIX                      = "Vim25Api."
@@ -46,6 +49,7 @@ const (
 	COMMANDLINE_TYPE_ID                 = "0x60000002"
 	OPTIONS_FILE_NAME_TYPE_ID           = "0x60000003"
 	BOOT_SECURITY_OPTION_TYPE_ID        = "0x60000004"
+	BOOT_COMPLETE_TYPE_ID               = "0x60000005"
 )
 
 func (vc *VmwareConnector) GetHostDetails() (taModel.HostInfo, error) {
@@ -193,6 +197,7 @@ func getPcrEventLog(hostTpmEventLogEntry []vim25Types.HostTpmEventLogEntry, even
 		pcrFound := false
 		index := 0
 		parsedEventLogEntry := types.TpmEvent{}
+
 		//This is done to preserve the dynamic data i.e the info of the event details
 		marshalledEntry, err := json.Marshal(eventLogEntry)
 		log.Debugf("Marshalled event log : %s", string(marshalledEntry))
@@ -205,7 +210,7 @@ func getPcrEventLog(hostTpmEventLogEntry []vim25Types.HostTpmEventLogEntry, even
 		if err != nil {
 			return hvs.PcrEventLogMap{}, err
 		}
-
+		eventLogEntryType := getType(eventLogEntry.EventDetails)
 		//vCenter 6.5 only supports SHA1 digest and hence do not have digest method field. Also if the hash is 0 they
 		//send out 40 0s instead of 20
 		if len(parsedEventLogEntry.EventDetails.DataHash) == sha1.Size || len(parsedEventLogEntry.EventDetails.DataHash) == 40 {
@@ -217,7 +222,7 @@ func getPcrEventLog(hostTpmEventLogEntry []vim25Types.HostTpmEventLogEntry, even
 				}
 				index++
 			}
-			eventLog := getEventLogInfo(parsedEventLogEntry)
+			eventLog := getEventLogInfo(parsedEventLogEntry, eventLogEntryType)
 
 			if !pcrFound {
 				eventLogMap.Sha1EventLogs = append(eventLogMap.Sha1EventLogs, hvs.TpmEventLog{Pcr: hvs.Pcr{Index: parsedEventLogEntry.PcrIndex, Bank: string(parsedEventLogEntry.EventDetails.DataHashMethod)}, TpmEvent: []hvs.EventLog{eventLog}})
@@ -234,7 +239,7 @@ func getPcrEventLog(hostTpmEventLogEntry []vim25Types.HostTpmEventLogEntry, even
 				index++
 			}
 
-			eventLog := getEventLogInfo(parsedEventLogEntry)
+			eventLog := getEventLogInfo(parsedEventLogEntry, eventLogEntryType)
 
 			if !pcrFound {
 				eventLogMap.Sha256EventLogs = append(eventLogMap.Sha256EventLogs,
@@ -252,7 +257,7 @@ func getPcrEventLog(hostTpmEventLogEntry []vim25Types.HostTpmEventLogEntry, even
 				index++
 			}
 
-			eventLog := getEventLogInfo(parsedEventLogEntry)
+			eventLog := getEventLogInfo(parsedEventLogEntry, eventLogEntryType)
 
 			if !pcrFound {
 				eventLogMap.Sha384EventLogs = append(eventLogMap.Sha384EventLogs,
@@ -300,8 +305,8 @@ func intArrayToHexString(pcrDigestArray []int) string {
 	return pcrDigestString
 }
 
-//It checks the type of TPM event and accordingly updates the event log entry values
-func getEventLogInfo(parsedEventLogEntry types.TpmEvent) hvs.EventLog {
+// It checks the type of TPM event and accordingly updates the event log entry values
+func getEventLogInfo(parsedEventLogEntry types.TpmEvent, eventLogEntryType string) hvs.EventLog {
 
 	log.Trace("vmware_host_connector:getEventLogInfo() Entering")
 	defer log.Trace("vmware_host_connector:getEventLogInfo() Leaving")
@@ -338,11 +343,24 @@ func getEventLogInfo(parsedEventLogEntry types.TpmEvent) hvs.EventLog {
 		eventLog.TypeName = *parsedEventLogEntry.EventDetails.BootSecurityOption
 		eventLog.Tags = append(eventLog.Tags, BOOT_SECURITY_OPTIONS_PREFIX+*parsedEventLogEntry.EventDetails.BootSecurityOption)
 		eventLog.Tags = append(eventLog.Tags, VIM_API_PREFIX+TPM_BOOT_SECURITY_OPTION_EVENT_TYPE+DETAILS_SUFFIX)
+	} else if eventLogEntryType == TPM_BOOT_COMPLETE_EVENT_TYPE+DETAILS_SUFFIX {
+		eventLog.TypeID = BOOT_COMPLETE_TYPE_ID
+		eventLog.TypeName = TPM_BOOT_COMPLETE_EVENT_NAME
+		eventLog.Tags = append(eventLog.Tags, BOOT_OPTIONS_PREFIX+TPM_BOOT_COMPLETE_EVENT_NAME)
+		eventLog.Tags = append(eventLog.Tags, VIM_API_PREFIX+TPM_BOOT_COMPLETE_EVENT_TYPE+DETAILS_SUFFIX)
 	} else {
 		log.Warn("Unrecognized event in module event log")
 	}
 
 	return eventLog
+}
+
+func getType(x interface{}) string {
+	if t := reflect.TypeOf(x); t.Kind() == reflect.Ptr {
+		return t.Elem().Name()
+	} else {
+		return t.Name()
+	}
 }
 
 func getBootUUIDFromCL(commandLine string) string {
